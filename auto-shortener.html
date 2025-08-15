@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto URL Shortener</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .short-url {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 3px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔗 Ultra Short URL Shortener</h2>
+        
+        <input type="url" id="urlInput" placeholder="Paste your long URL here..." value="https://www.youtube.com/@zainabas-te5nu">
+        
+        <button onclick="shortenURL()">Shorten Now</button>
+        <button onclick="autoRedirect()">Auto Redirect</button>
+        
+        <div id="result" class="result">
+            <h3>Your Short URL:</h3>
+            <div class="short-url" id="shortUrl"></div>
+            <button onclick="copyURL()">Copy</button>
+            <button onclick="visitURL()">Visit Now</button>
+        </div>
+    </div>
+
+    <script>
+        // URL mapping storage
+        const urlDatabase = {
+            'abc': 'https://www.youtube.com/@zainabas-te5nu',
+            'xyz': 'https://rb.gy/d6j32s',
+            '123': 'https://www.youtube.com/@zainabas-te5nu',
+            '456': 'https://rb.gy/d6j32s'
+        };
+
+        function generateShortCode() {
+            const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+            let result = '';
+            for (let i = 0; i < 3; i++) {
+                result += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return result;
+        }
+
+        function shortenURL() {
+            const longUrl = document.getElementById('urlInput').value.trim();
+            
+            if (!longUrl) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            // Find existing or create new short code
+            let shortCode = null;
+            for (let [code, url] of Object.entries(urlDatabase)) {
+                if (url === longUrl) {
+                    shortCode = code;
+                    break;
+                }
+            }
+
+            if (!shortCode) {
+                shortCode = generateShortCode();
+                while (urlDatabase[shortCode]) {
+                    shortCode = generateShortCode();
+                }
+                urlDatabase[shortCode] = longUrl;
+            }
+
+            const shortUrl = window.location.origin + '/' + shortCode;
+            document.getElementById('shortUrl').textContent = shortUrl;
+            document.getElementById('result').style.display = 'block';
+        }
+
+        function copyURL() {
+            const url = document.getElementById('shortUrl').textContent;
+            navigator.clipboard.writeText(url);
+            alert('URL copied to clipboard!');
+        }
+
+        function visitURL() {
+            const url = document.getElementById('shortUrl').textContent;
+            window.open('http://' + url, '_blank');
+        }
+
+        function autoRedirect() {
+            const longUrl = document.getElementById('urlInput').value.trim();
+            if (!longUrl) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            // Create instant redirect
+            const shortCode = generateShortCode();
+            urlDatabase[shortCode] = longUrl;
+            
+            const redirectUrl = window.location.origin + '/' + shortCode;
+            document.getElementById('shortUrl').textContent = redirectUrl;
+            document.getElementById('result').style.display = 'block';
+            
+            // Auto-redirect after 2 seconds
+            setTimeout(() => {
+                window.open(longUrl, '_blank');
+            }, 2000);
+        }
+
+        // Handle direct access to shortened URLs
+        const path = window.location.pathname.slice(1);
+        if (path && path.length === 3 && urlDatabase[path]) {
+            window.location.href = urlDatabase[path];
+        }
+
+        // Allow Enter key
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                shortenURL();
+            }
+        });
+    </script>
+</body>
+</html>
